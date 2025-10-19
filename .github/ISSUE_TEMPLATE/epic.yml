@@ -1,0 +1,17 @@
+name: "Epic"
+description: "Крупная цель, объединяющая несколько спринтов"
+title: "EPIC: <кратко>"
+labels: ["type:epic"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Цель
+  - type: textarea
+    id: scope
+    attributes:
+      label: Объём (in/out)
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки (Epic)

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["objective", "context", "constraints", "acceptance", "tests"],
+  "properties": {
+    "objective": { "type": "string" },
+    "context": { "type": "string" },
+    "constraints": { "type": "string" },
+    "acceptance": { "type": "string" },
+    "tests": { "type": "string" }
+  }
+}

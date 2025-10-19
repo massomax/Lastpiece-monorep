@@ -1,0 +1,4 @@
+{
+  "include": ["truth/**", "docs/**"],
+  "exclude": ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/.turbo/**"]
+}

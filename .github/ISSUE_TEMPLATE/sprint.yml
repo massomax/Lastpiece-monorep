@@ -1,0 +1,17 @@
+name: "Sprint"
+description: "Спринт 1-2 недели"
+title: "SPRINT: <даты> — <фокус>"
+labels: ["type:sprint"]
+body:
+  - type: textarea
+    id: goals
+    attributes:
+      label: Цели спринта
+  - type: textarea
+    id: backlog
+    attributes:
+      label: Список задач (Task ссылки)
+  - type: textarea
+    id: risks
+    attributes:
+      label: Риски/блокеры

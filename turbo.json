@@ -1,0 +1,9 @@
+{
+  "pipeline": {
+    "dev": { "cache": false },
+    "build": { "dependsOn": ["^build"] },
+    "typecheck": {},
+    "lint": {},
+    "test": {}
+  }
+}

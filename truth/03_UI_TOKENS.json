@@ -1,0 +1,10 @@
+{
+  "colors": {
+    "primary": "#0B1F3B",
+    "accent": "#FFC93A",
+    "neutral": "#111111",
+    "bg": "#FFFFFF"
+  },
+  "fontFamily": "Inter, system-ui",
+  "radii": { "sm": 8, "md": 12, "lg": 16 }
+}
