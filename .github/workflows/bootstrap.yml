@@ -339,28 +339,6 @@ jobs:
               attributes: { label: Out of scope }
           EOF
 
-          # PR template
-          cat > .github/PULL_REQUEST_TEMPLATE.md << 'EOF'
-          ## Что сделано
-          - …
-
-          ## План
-          - Файлы: …
-          - Шаги: …
-          - Риски: …
-
-          ## Самопроверка (Critic)
-          - Сверка с SCOPE_LOCK — …
-          - ACCEPTANCE — …
-          - Компромиссы: …
-
-          ## Тесты
-          - …
-
-          ## Ссылки
-          - Epic/Sprint/Task: …
-          EOF
-
           # Truth guards CI
           cat > .github/workflows/truth-guards.yml << 'EOF'
           name: Truth Guards
@@ -393,4 +371,4 @@ jobs:
           body: "Автогенерация каркаса монорепо, truth/*, docs/*, шаблонов issues/PR и guard-пайплайна."
           commit-message: "chore: bootstrap monorepo + truth pack"
           branch: "bootstrap/monorepo-truth"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.BOOTSTRAP_TOKEN }}
