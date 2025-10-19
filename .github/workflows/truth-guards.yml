@@ -1,0 +1,21 @@
+name: Truth Guards
+on: [pull_request]
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Block API_LOCK edits
+        run: |
+          if git diff --name-only origin/... | grep -q '^truth/02_API_LOCK.openapi.yaml$'; then
+            echo "::error::API_LOCK изменён. Вынеси это в отдельный PR 'API change'."
+            exit 1
+          fi
+
+      - name: Require Plan & Critic
+        run: |
+          BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
+          echo "$BODY" | grep -qi '## План' || (echo "::error::Нет секции '## План' в PR." && exit 1)
+          echo "$BODY" | grep -qi '## Самопроверка' || (echo "::error::Нет секции '## Самопроверка' в PR." && exit 1)

@@ -1,1 +1,7 @@
-# Lastpiece-monorep
+# LastPiece Monorepo
+
+Стартовый каркас: фронт в `apps/web`, бэкенд в `server`, "точки истины" в `truth/`, общая документация в `docs/`.
+
+## Быстрый старт (локально)
+pnpm i
+# далее добавь свой сервер в ./server и фронт в ./apps/web

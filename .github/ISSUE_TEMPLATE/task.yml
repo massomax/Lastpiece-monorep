@@ -1,0 +1,20 @@
+name: "Task"
+description: "Задача для разработчика/агента"
+title: "TASK: <кратко>"
+labels: ["type:task"]
+body:
+  - type: textarea
+    id: objective
+    attributes: { label: Цель }
+  - type: textarea
+    id: context
+    attributes: { label: Контекст/файлы }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Критерии приёмки (DoD) }
+  - type: textarea
+    id: tests
+    attributes: { label: Тест-кейсы (минимум) }
+  - type: textarea
+    id: non_goals
+    attributes: { label: Out of scope }
