@@ -1,0 +1,396 @@
+name: Bootstrap Monorepo + Truth Pack
+on:
+  push:
+    paths:
+      - 'bootstrap.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Generate skeleton
+        run: |
+          set -e
+
+          # Directories
+          mkdir -p apps/web server packages .github/ISSUE_TEMPLATE .github/workflows docs truth codex/tasks
+
+          # Root files
+          cat > .gitignore << 'EOF'
+          node_modules/
+          .next/
+          dist/
+          .turbo/
+          .DS_Store
+          .env*
+          EOF
+
+          cat > .editorconfig << 'EOF'
+          root = true
+          [*]
+          charset = utf-8
+          end_of_line = lf
+          indent_style = space
+          indent_size = 2
+          insert_final_newline = true
+          EOF
+
+          cat > package.json << 'EOF'
+          {
+            "name": "lastpiece",
+            "private": true,
+            "packageManager": "pnpm@9.0.0",
+            "scripts": {
+              "dev": "turbo run dev --parallel",
+              "build": "turbo run build",
+              "typecheck": "turbo run typecheck",
+              "lint": "turbo run lint",
+              "test": "turbo run test"
+            },
+            "devDependencies": {
+              "turbo": "^2.0.0",
+              "typescript": "^5.6.0"
+            }
+          }
+          EOF
+
+          cat > pnpm-workspace.yaml << 'EOF'
+          packages:
+            - "apps/*"
+            - "server"
+            - "packages/*"
+          EOF
+
+          cat > tsconfig.base.json << 'EOF'
+          {
+            "compilerOptions": {
+              "target": "ES2022",
+              "lib": ["ES2022", "DOM"],
+              "module": "ESNext",
+              "moduleResolution": "Bundler",
+              "strict": true,
+              "baseUrl": ".",
+              "paths": {
+                "@tokens/*": ["packages/tokens/*"],
+                "@ui/*": ["packages/ui/*"]
+              }
+            }
+          }
+          EOF
+
+          cat > turbo.json << 'EOF'
+          {
+            "pipeline": {
+              "dev": { "cache": false },
+              "build": { "dependsOn": ["^build"] },
+              "typecheck": {},
+              "lint": {},
+              "test": {}
+            }
+          }
+          EOF
+
+          cat > CODEOWNERS << 'EOF'
+          /truth/*  @your-nickname
+          EOF
+
+          # Minimal READMEs
+          cat > README.md << 'EOF'
+          # LastPiece Monorepo
+
+          Стартовый каркас: фронт в `apps/web`, бэкенд в `server`, "точки истины" в `truth/`, общая документация в `docs/`.
+
+          ## Быстрый старт (локально)
+          pnpm i
+          # далее добавь свой сервер в ./server и фронт в ./apps/web
+          EOF
+
+          cat > server/README.md << 'EOF'
+          # Server
+          Перемести сюда существующий бэкенд. Рекомендуемый вход: `server/src/index.ts`, порт 4000.
+          ENV: `server/.env` (см. `.env.example`).
+          EOF
+
+          cat > server/.env.example << 'EOF'
+          PORT=4000
+          MONGO_URL=mongodb://localhost:27017/lastpiece
+          JWT_SECRET=replace-me
+          EOF
+
+          cat > apps/web/README.md << 'EOF'
+          # Web (Next.js)
+          Здесь будет фронтенд (Next.js). Позже добавим код и подключим tokens/ui-пакеты.
+          EOF
+
+          # Docs
+          cat > docs/PRD.md << 'EOF'
+          # PRD — Последняя Штучка (One-Pager)
+          Цель: платформа для публикации акционных "последних штучек".
+          Персоны: Покупатель, Продавец, Модератор.
+          MVP: авторизация, каталог, карточка, модерация, Excel-импорт/экспорт.
+          EOF
+
+          cat > docs/ARCHITECTURE.md << 'EOF'
+          # Архитектура
+          Monorepo (pnpm+turbo). Server: Express+Mongo(Mongoose), JWT, Zod, Pino.
+          Web: Next.js+React+TS, TanStack Query. Контракты: OpenAPI.
+          EOF
+
+          cat > docs/API.openapi.yaml << 'EOF'
+          openapi: 3.1.0
+          info:
+            title: LastPiece API
+            version: 0.1.0
+          paths:
+            /api/products:
+              get:
+                summary: List products
+                responses:
+                  "200":
+                    description: OK
+          EOF
+
+          # Truth Pack
+          cat > truth/00_CONSTITUTION.md << 'EOF'
+          # Конституция проекта
+          - Что строим: платформа "Последняя Штучка".
+          - Приоритеты: корректность данных, прозрачный UX, соблюдение UI-гайда.
+          - Запреты: менять API/схемы БД/секреты без отдельного PR-обсуждения.
+          - Каждый PR содержит: План и Самопроверку.
+          EOF
+
+          cat > truth/01_SCOPE_LOCK.yaml << 'EOF'
+          version: v1
+          allowed:
+            - правки фронта в каталоге/карточке товара
+            - фиксы багов авторизации без изменения API
+          forbidden:
+            - добавлять новые эндпоинты
+            - менять схемы БД
+            - трогать секреты/ENV
+          EOF
+
+          # Копия API как "замороженный контракт"
+          cp docs/API.openapi.yaml truth/02_API_LOCK.openapi.yaml
+
+          cat > truth/03_UI_TOKENS.json << 'EOF'
+          {
+            "colors": {
+              "primary": "#0B1F3B",
+              "accent": "#FFC93A",
+              "neutral": "#111111",
+              "bg": "#FFFFFF"
+            },
+            "fontFamily": "Inter, system-ui",
+            "radii": { "sm": 8, "md": 12, "lg": 16 }
+          }
+          EOF
+
+          cat > truth/04_GLOSSARY.md << 'EOF'
+          # Глоссарий
+          - Товар (Product): базовая сущность каталога; statuses: draft|pending|active|rejected|archived.
+          - Просмотры 7/30: счётчики для ранжирования.
+          EOF
+
+          cat > truth/05_RULES.md << 'EOF'
+          # Правила для ИИ (Agent Rules)
+          Обязательства:
+          - Всегда сверяйся с 02_API_LOCK.openapi.yaml, 03_UI_TOKENS.json, 06_ACCEPTANCE.md.
+          - Сначала План (какие файлы, шаги, риски), затем реализация.
+          - В конце Самопроверка (Critic): сверка с SCOPE_LOCK и ACCEPTANCE.
+          Запреты:
+          - Не менять API_LOCK, схемы БД, ENV/секреты.
+          - Не добавлять зависимости без мотивации в PR.
+          EOF
+
+          cat > truth/06_ACCEPTANCE.md << 'EOF'
+          # Критерии приёмки (выдержка)
+          ## Каталог
+          - Фильтры синхронизируются с URL.
+          - Пустые состояния/лоадеры предусмотрены.
+          - Карточка без externalUrl — без ошибок (CTA скрыт или "#").
+          ## Авторизация
+          - Refresh-флоу: устойчив к 401/403, без бесконечных циклов.
+          EOF
+
+          cat > truth/07_TASK_SCHEMA.json << 'EOF'
+          {
+            "type": "object",
+            "required": ["objective", "context", "constraints", "acceptance", "tests"],
+            "properties": {
+              "objective": { "type": "string" },
+              "context": { "type": "string" },
+              "constraints": { "type": "string" },
+              "acceptance": { "type": "string" },
+              "tests": { "type": "string" }
+            }
+          }
+          EOF
+
+          mkdir -p truth/08_PROMPTS
+          cat > truth/08_PROMPTS/task.md << 'EOF'
+          # Objective
+          (Что сделать, одним абзацем)
+
+          # Context
+          (Файлы/модули, ссылки на API/UI токены)
+
+          # Constraints
+          (Что нельзя менять)
+
+          # Acceptance
+          (Критерии готовности)
+
+          # Tests
+          (Минимум 3 кейса)
+          EOF
+
+          cat > truth/08_PROMPTS/critic.md << 'EOF'
+          ## Самопроверка (Critic)
+          - Сверка с truth/01_SCOPE_LOCK.yaml — ок/не ок: …
+          - Критерии из truth/06_ACCEPTANCE.md — пройдены: …
+          - Компромиссы/ограничения: …
+          EOF
+
+          cat > truth/08_PROMPTS/plan.md << 'EOF'
+          ## План
+          - Файлы к изменению: …
+          - Шаги: …
+          - Риски/edge-cases: …
+          EOF
+
+          # codex context
+          mkdir -p codex
+          cat > codex/context.json << 'EOF'
+          {
+            "include": ["truth/**", "docs/**"],
+            "exclude": ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/.turbo/**"]
+          }
+          EOF
+
+          # Issue templates
+          cat > .github/ISSUE_TEMPLATE/epic.yml << 'EOF'
+          name: "Epic"
+          description: "Крупная цель, объединяющая несколько спринтов"
+          title: "EPIC: <кратко>"
+          labels: ["type:epic"]
+          body:
+            - type: textarea
+              id: goal
+              attributes:
+                label: Цель
+            - type: textarea
+              id: scope
+              attributes:
+                label: Объём (in/out)
+            - type: textarea
+              id: acceptance
+              attributes:
+                label: Критерии приёмки (Epic)
+          EOF
+
+          cat > .github/ISSUE_TEMPLATE/sprint.yml << 'EOF'
+          name: "Sprint"
+          description: "Спринт 1-2 недели"
+          title: "SPRINT: <даты> — <фокус>"
+          labels: ["type:sprint"]
+          body:
+            - type: textarea
+              id: goals
+              attributes:
+                label: Цели спринта
+            - type: textarea
+              id: backlog
+              attributes:
+                label: Список задач (Task ссылки)
+            - type: textarea
+              id: risks
+              attributes:
+                label: Риски/блокеры
+          EOF
+
+          cat > .github/ISSUE_TEMPLATE/task.yml << 'EOF'
+          name: "Task"
+          description: "Задача для разработчика/агента"
+          title: "TASK: <кратко>"
+          labels: ["type:task"]
+          body:
+            - type: textarea
+              id: objective
+              attributes: { label: Цель }
+            - type: textarea
+              id: context
+              attributes: { label: Контекст/файлы }
+            - type: textarea
+              id: acceptance
+              attributes: { label: Критерии приёмки (DoD) }
+            - type: textarea
+              id: tests
+              attributes: { label: Тест-кейсы (минимум) }
+            - type: textarea
+              id: non_goals
+              attributes: { label: Out of scope }
+          EOF
+
+          # PR template
+          cat > .github/PULL_REQUEST_TEMPLATE.md << 'EOF'
+          ## Что сделано
+          - …
+
+          ## План
+          - Файлы: …
+          - Шаги: …
+          - Риски: …
+
+          ## Самопроверка (Critic)
+          - Сверка с SCOPE_LOCK — …
+          - ACCEPTANCE — …
+          - Компромиссы: …
+
+          ## Тесты
+          - …
+
+          ## Ссылки
+          - Epic/Sprint/Task: …
+          EOF
+
+          # Truth guards CI
+          cat > .github/workflows/truth-guards.yml << 'EOF'
+          name: Truth Guards
+          on: [pull_request]
+          jobs:
+            guards:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                  with: { fetch-depth: 0 }
+
+                - name: Block API_LOCK edits
+                  run: |
+                    if git diff --name-only origin/${{ github.base_ref }}... | grep -q '^truth/02_API_LOCK.openapi.yaml$'; then
+                      echo "::error::API_LOCK изменён. Вынеси это в отдельный PR 'API change'."
+                      exit 1
+                    fi
+
+                - name: Require Plan & Critic
+                  run: |
+                    BODY=$(jq -r '.pull_request.body' "$GITHUB_EVENT_PATH")
+                    echo "$BODY" | grep -qi '## План' || (echo "::error::Нет секции '## План' в PR." && exit 1)
+                    echo "$BODY" | grep -qi '## Самопроверка' || (echo "::error::Нет секции '## Самопроверка' в PR." && exit 1)
+          EOF
+
+      - name: Open skeleton PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Bootstrap monorepo + Truth Pack"
+          body: "Автогенерация каркаса монорепо, truth/*, docs/*, шаблонов issues/PR и guard-пайплайна."
+          commit-message: "chore: bootstrap monorepo + truth pack"
+          branch: "bootstrap/monorepo-truth"
+          token: ${{ secrets.GITHUB_TOKEN }}
